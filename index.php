@@ -11,6 +11,37 @@ function escapeHtml(?string $value): string
     );
 }
 
+function configurationValue(string $name)
+{
+    $value = getenv($name);
+
+    if ($value !== false && $value !== '') {
+        return $value;
+    }
+
+    foreach ([$_ENV, $_SERVER] as $source) {
+        if (isset($source[$name]) && $source[$name] !== '') {
+            return (string) $source[$name];
+        }
+
+        $redirectedName = 'REDIRECT_' . $name;
+
+        if (isset($source[$redirectedName]) && $source[$redirectedName] !== '') {
+            return (string) $source[$redirectedName];
+        }
+    }
+
+    if (function_exists('apache_getenv')) {
+        $value = apache_getenv($name, true);
+
+        if ($value !== false && $value !== '') {
+            return $value;
+        }
+    }
+
+    return false;
+}
+
 function csvCell(?string $value): string
 {
     $value = $value ?? '';
@@ -46,8 +77,8 @@ $rows = [];
 $errorMessage = null;
 
 try {
-    $databaseUser = getenv('MYSQL_USER');
-    $databasePassword = getenv('MYSQL_PASSWORD');
+    $databaseUser = configurationValue('MYSQL_USER');
+    $databasePassword = configurationValue('MYSQL_PASSWORD');
 
     if ($databaseUser === false || $databaseUser === '') {
         throw new RuntimeException('MYSQL_USER is not configured');
@@ -57,9 +88,10 @@ try {
         throw new RuntimeException('MYSQL_PASSWORD is not configured');
     }
 
-    $databaseHost = getenv('MYSQL_HOST') ?: 'dbod-drd4-collaboration-database.cern.ch';
-    $databasePort = getenv('MYSQL_PORT') ?: '5547';
-    $databaseName = getenv('MYSQL_DATABASE') ?: 'drd4';
+    $databaseHost = configurationValue('MYSQL_HOST')
+        ?: 'dbod-drd4-collaboration-database.cern.ch';
+    $databasePort = configurationValue('MYSQL_PORT') ?: '5547';
+    $databaseName = configurationValue('MYSQL_DATABASE') ?: 'drd4';
 
     $dataSourceName = sprintf(
         'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',

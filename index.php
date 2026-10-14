@@ -119,7 +119,8 @@ try {
         );
     } elseif ($view === 'agencies') {
         $statement = $database->query(
-            'SELECT code, name, country, representative, institutions_represented
+            'SELECT id, code, name, country, representative, email, `function`,
+                    delegate, delegate_email, institutions_represented
              FROM agencies
              ORDER BY country, name'
         );
@@ -186,11 +187,16 @@ try {
             fputcsv(
                 $output,
                 [
-                    'Code',
-                    'Funding agency',
-                    'Country',
-                    'Representative',
-                    'Institutions represented',
+                    'id',
+                    'code',
+                    'name',
+                    'country',
+                    'representative',
+                    'email',
+                    'function',
+                    'delegate',
+                    'delegate_email',
+                    'institutions_represented',
                 ],
                 ',',
                 '"',
@@ -201,13 +207,16 @@ try {
                 fputcsv(
                     $output,
                     [
+                        csvCell((string) $agency['id']),
                         csvCell($agency['code']),
                         csvCell($agency['name']),
                         csvCell($agency['country']),
                         csvCell($agency['representative']),
-                        csvCell(implode(', ', representedInstitutions(
-                            $agency['institutions_represented']
-                        ))),
+                        csvCell($agency['email']),
+                        csvCell($agency['function']),
+                        csvCell($agency['delegate']),
+                        csvCell($agency['delegate_email']),
+                        csvCell($agency['institutions_represented']),
                     ],
                     ',',
                     '"',
@@ -380,6 +389,11 @@ try {
             cursor: help;
         }
 
+        .contact-name {
+            border-bottom: 1px dotted #5f6368;
+            cursor: help;
+        }
+
         .institutes-help {
             display: inline-flex;
             align-items: center;
@@ -524,17 +538,51 @@ try {
                         <th scope="col">Funding agency</th>
                         <th scope="col">Country</th>
                         <th scope="col">Representative</th>
+                        <th scope="col">Delegate</th>
                         <th scope="col">Institutions represented</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($rows as $agency): ?>
-                    <?php $represented = representedInstitutions($agency['institutions_represented']); ?>
+                    <?php
+                    $represented = representedInstitutions($agency['institutions_represented']);
+                    $representativeDetails = array_filter([
+                        $agency['function'] !== null && $agency['function'] !== ''
+                            ? 'Function: ' . $agency['function']
+                            : null,
+                        $agency['email'] !== null && $agency['email'] !== ''
+                            ? 'Email: ' . $agency['email']
+                            : null,
+                    ]);
+                    ?>
                     <tr>
                         <td><?= escapeHtml($agency['code']) ?></td>
                         <td><?= escapeHtml($agency['name']) ?></td>
                         <td><?= escapeHtml($agency['country']) ?></td>
-                        <td><?= escapeHtml($agency['representative']) ?></td>
+                        <td>
+                        <?php if ($agency['representative'] !== null && $agency['representative'] !== ''): ?>
+                            <span
+                                class="contact-name"
+                                <?php if ($representativeDetails !== []): ?>
+                                title="<?= escapeHtml(implode("\n", $representativeDetails)) ?>"
+                                <?php endif; ?>
+                            ><?= escapeHtml($agency['representative']) ?></span>
+                        <?php else: ?>
+                            &mdash;
+                        <?php endif; ?>
+                        </td>
+                        <td>
+                        <?php if ($agency['delegate'] !== null && $agency['delegate'] !== ''): ?>
+                            <span
+                                class="contact-name"
+                                <?php if ($agency['delegate_email'] !== null && $agency['delegate_email'] !== ''): ?>
+                                title="Email: <?= escapeHtml($agency['delegate_email']) ?>"
+                                <?php endif; ?>
+                            ><?= escapeHtml($agency['delegate']) ?></span>
+                        <?php else: ?>
+                            &mdash;
+                        <?php endif; ?>
+                        </td>
                         <td>
                         <?php if ($represented !== []): ?>
                             <span

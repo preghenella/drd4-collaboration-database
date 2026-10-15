@@ -57,10 +57,10 @@ function requireEditor(): string
 
 function database(): PDO
 {
-    $user = configurationValue('MYSQL_USER');
-    $password = configurationValue('MYSQL_PASSWORD');
+    $user = configurationValue('MYSQL_WRITE_USER');
+    $password = configurationValue('MYSQL_WRITE_PASSWORD');
     if ($user === false || $password === false) {
-        throw new RuntimeException('Database credentials are not configured.');
+        throw new RuntimeException('Dedicated database writer credentials are not configured.');
     }
     $host = configurationValue('MYSQL_HOST') ?: 'dbod-drd4-collaboration-database.cern.ch';
     $port = configurationValue('MYSQL_PORT') ?: '5547';

@@ -169,8 +169,6 @@ $definitions = [
             'representative' => ['label' => 'Representative'],
             'email' => ['label' => 'Representative email', 'type' => 'email'],
             'function' => ['label' => 'Function'],
-            'delegate' => ['label' => 'Delegate'],
-            'delegate_email' => ['label' => 'Delegate email', 'type' => 'email'],
             'institutions_represented' => ['label' => 'Institution codes', 'type' => 'list'],
         ],
     ],
@@ -213,6 +211,7 @@ try {
     exit('The database administration interface is temporarily unavailable.');
 }
 $errors = [];
+$loadError = null;
 $record = array_fill_keys(array_keys($definition['fields']), '');
 $editing = isset($_GET['id']) && $_GET['id'] !== '';
 $recordKey = $editing ? (string) $_GET['id'] : '';
@@ -313,36 +312,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 } elseif ($editing) {
-    $statement = $database->prepare(sprintf(
-        'SELECT * FROM `%s` WHERE `%s` = ?',
-        $definition['table'],
-        $definition['key']
-    ));
-    $statement->execute([$recordKey]);
-    $stored = $statement->fetch();
-    if ($stored === false) {
-        http_response_code(404);
-        exit('Record not found.');
-    }
-    $recordVersion = hash('sha256', json_encode(
-        $stored,
-        JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE
-    ));
-    foreach ($definition['fields'] as $name => $field) {
-        $record[$name] = ($field['type'] ?? '') === 'list'
-            ? listText($stored[$name] ?? null)
-            : (string) ($stored[$name] ?? '');
+    try {
+        $statement = $database->prepare(sprintf(
+            'SELECT * FROM `%s` WHERE `%s` = ?',
+            $definition['table'],
+            $definition['key']
+        ));
+        $statement->execute([$recordKey]);
+        $stored = $statement->fetch();
+        if ($stored === false) {
+            http_response_code(404);
+            $loadError = 'The requested record was not found.';
+            $editing = false;
+        } else {
+            $recordVersion = hash('sha256', json_encode(
+                $stored,
+                JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE
+            ));
+            foreach ($definition['fields'] as $name => $field) {
+                $record[$name] = ($field['type'] ?? '') === 'list'
+                    ? listText($stored[$name] ?? null)
+                    : (string) ($stored[$name] ?? '');
+            }
+        }
+    } catch (Throwable $exception) {
+        error_log('Unable to load DRD4 record: ' . $exception->getMessage());
+        $loadError = 'This record could not be loaded. Check the server log for details.';
+        $editing = false;
     }
 }
 
 $listColumns = array_keys($definition['fields']);
-$listStatement = $database->query(sprintf(
-    'SELECT `%s` FROM `%s` ORDER BY `%s` LIMIT 500',
-    implode('`, `', array_unique([$definition['key'], ...$listColumns])),
-    $definition['table'],
-    isset($definition['fields']['country']) ? 'country' : $definition['key']
-));
-$rows = $listStatement->fetchAll();
+$rows = [];
+try {
+    $listStatement = $database->query(sprintf(
+        'SELECT `%s` FROM `%s` ORDER BY `%s` LIMIT 500',
+        implode('`, `', array_unique([$definition['key'], ...$listColumns])),
+        $definition['table'],
+        isset($definition['fields']['country']) ? 'country' : $definition['key']
+    ));
+    $rows = $listStatement->fetchAll();
+} catch (Throwable $exception) {
+    error_log('Unable to list DRD4 records: ' . $exception->getMessage());
+    $loadError = 'This table could not be loaded. Check the server log for details.';
+}
 $notice = $_SESSION['notice'] ?? null;
 unset($_SESSION['notice']);
 ?>
@@ -389,6 +402,7 @@ unset($_SESSION['notice']);
     <?php endforeach; ?>
     </nav>
     <?php if ($notice !== null): ?><p class="notice"><?= escapeHtml($notice) ?></p><?php endif; ?>
+    <?php if ($loadError !== null): ?><p class="errors"><?= escapeHtml($loadError) ?></p><?php endif; ?>
     <?php if ($errors !== []): ?>
         <div class="errors"><strong>Please correct the following:</strong><ul>
         <?php foreach ($errors as $error): ?><li><?= escapeHtml($error) ?></li><?php endforeach; ?>
@@ -414,8 +428,10 @@ unset($_SESSION['notice']);
                     </label>
                 <?php endforeach; ?>
                 <div class="actions">
-                    <button class="button" type="submit">Save</button>
-                    <a class="button secondary" href="?view=<?= escapeHtml($view) ?>">New record</a>
+                    <button class="button" type="submit"<?= $loadError !== null ? ' disabled' : '' ?>>Save</button>
+                    <?php if ($editing): ?>
+                        <a class="button secondary" href="?view=<?= escapeHtml($view) ?>">Cancel</a>
+                    <?php endif; ?>
                 </div>
             </form>
         </section>

@@ -344,6 +344,11 @@ try {
             color: #17365d;
         }
 
+        .identity {
+            margin-top: 0;
+            color: #5f6368;
+        }
+
         .tabs {
             display: flex;
             gap: 0.25rem;
@@ -502,6 +507,12 @@ try {
 <body>
 <main>
     <h1>DRD4 Collaboration Database</h1>
+    <?php if ($editor !== null): ?>
+        <p class="identity">
+            Signed in as <?= escapeHtml($editor) ?> ·
+            <a href="admin/?view=<?= escapeHtml($view) ?>">Admin view</a>
+        </p>
+    <?php endif; ?>
 
     <nav class="tabs" aria-label="Database tables">
         <a

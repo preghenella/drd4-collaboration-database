@@ -124,15 +124,14 @@ try {
     } elseif ($view === 'agencies') {
         $statement = $database->query(
             'SELECT id, code, name, country, representative, email, `function`,
-                    delegate, delegate_email, institutions_represented
+                    institutions_represented
              FROM agencies
              ORDER BY country, name'
         );
     } elseif ($view === 'resources-board') {
         $statement = $database->query(
-            'SELECT id, code, name, country, representative, email,
-                    institutions_represented
-             FROM `resources-board`
+            'SELECT id, code, name, country, representative, email
+             FROM resources_board
              ORDER BY country, name'
         );
     } else {
@@ -205,8 +204,6 @@ try {
                     'representative',
                     'email',
                     'function',
-                    'delegate',
-                    'delegate_email',
                     'institutions_represented',
                 ],
                 ',',
@@ -225,8 +222,6 @@ try {
                         csvCell($agency['representative']),
                         csvCell($agency['email']),
                         csvCell($agency['function']),
-                        csvCell($agency['delegate']),
-                        csvCell($agency['delegate_email']),
                         csvCell($agency['institutions_represented']),
                     ],
                     ',',
@@ -244,7 +239,6 @@ try {
                     'country',
                     'representative',
                     'email',
-                    'institutions_represented',
                 ],
                 ',',
                 '"',
@@ -261,7 +255,6 @@ try {
                         csvCell($member['country']),
                         csvCell($member['representative']),
                         csvCell($member['email']),
-                        csvCell($member['institutions_represented']),
                     ],
                     ',',
                     '"',
@@ -593,15 +586,16 @@ try {
                         <th scope="col">Country</th>
                         <th scope="col">Representative</th>
                         <?php if ($view === 'agencies'): ?>
-                            <th scope="col">Delegate</th>
+                            <th scope="col">Institutions represented</th>
                         <?php endif; ?>
-                        <th scope="col">Institutions represented</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($rows as $agency): ?>
                     <?php
-                    $represented = representedInstitutions($agency['institutions_represented']);
+                    $represented = $view === 'agencies'
+                        ? representedInstitutions($agency['institutions_represented'])
+                        : [];
                     $representativeDetails = array_filter([
                         isset($agency['function']) && $agency['function'] !== ''
                             ? 'Function: ' . $agency['function']
@@ -627,25 +621,15 @@ try {
                         </td>
                         <?php if ($view === 'agencies'): ?>
                             <td>
-                            <?php if ($agency['delegate'] !== null && $agency['delegate'] !== ''): ?>
+                            <?php if ($represented !== []): ?>
                                 <span
-                                    class="contact-name"
-                                    <?php if ($agency['delegate_email'] !== null && $agency['delegate_email'] !== ''): ?>
-                                    title="Email: <?= escapeHtml($agency['delegate_email']) ?>"
-                                    <?php endif; ?>
-                                ><?= escapeHtml($agency['delegate']) ?></span>
+                                    class="institutes-help"
+                                    title="<?= escapeHtml(implode("\n", $represented)) ?>"
+                                    aria-label="Institutions represented: <?= escapeHtml(implode(', ', $represented)) ?>"
+                                ><?= count($represented) ?></span>
                             <?php endif; ?>
                             </td>
                         <?php endif; ?>
-                        <td>
-                        <?php if ($represented !== []): ?>
-                            <span
-                                class="institutes-help"
-                                title="<?= escapeHtml(implode("\n", $represented)) ?>"
-                                aria-label="Institutions represented: <?= escapeHtml(implode(', ', $represented)) ?>"
-                            ><?= count($represented) ?></span>
-                        <?php endif; ?>
-                        </td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>

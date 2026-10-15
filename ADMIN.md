@@ -1,6 +1,6 @@
 # Database administration
 
-The public `index.php` remains read-only. Authorized editors use `admin.php` to
+The public `index.php` remains read-only. Authorized editors use `/admin` to
 add and update institutions, funding agencies, Resources Board members, and
 deliverables.
 

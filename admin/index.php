@@ -297,7 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             audit($database, $definition['table'], $newKey, $action, $old ?: null, $values, $editor);
             $database->commit();
             $_SESSION['notice'] = $definition['label'] . ' saved successfully.';
-            header('Location: admin.php?view=' . rawurlencode($view) . '&id=' . rawurlencode($newKey));
+            header('Location: ./?view=' . rawurlencode($view) . '&id=' . rawurlencode($newKey));
             exit;
         } catch (Throwable $exception) {
             $database->rollBack();
@@ -381,10 +381,10 @@ unset($_SESSION['notice']);
 <body>
 <main>
     <h1>Manage DRD4 Collaboration Database</h1>
-    <p class="identity">Signed in as <?= escapeHtml($editor) ?> · <a href="index.php?view=<?= escapeHtml($view) ?>">Public view</a></p>
+    <p class="identity">Signed in as <?= escapeHtml($editor) ?> · <a href="../?view=<?= escapeHtml($view) ?>">Public view</a></p>
     <nav class="tabs" aria-label="Database tables">
     <?php foreach ($definitions as $name => $item): ?>
-        <a class="<?= $view === $name ? 'active' : '' ?>" href="admin.php?view=<?= escapeHtml($name) ?>"><?= escapeHtml($item['label']) ?>s</a>
+        <a class="<?= $view === $name ? 'active' : '' ?>" href="?view=<?= escapeHtml($name) ?>"><?= escapeHtml($item['label']) ?>s</a>
     <?php endforeach; ?>
     </nav>
     <?php if ($notice !== null): ?><p class="notice"><?= escapeHtml($notice) ?></p><?php endif; ?>
@@ -396,7 +396,7 @@ unset($_SESSION['notice']);
     <div class="layout">
         <section class="panel">
             <h2><?= $editing ? 'Edit' : 'Add' ?> <?= escapeHtml($definition['label']) ?></h2>
-            <form method="post" action="admin.php">
+            <form method="post" action="">
                 <input type="hidden" name="csrf_token" value="<?= escapeHtml(csrfToken()) ?>">
                 <input type="hidden" name="view" value="<?= escapeHtml($view) ?>">
                 <input type="hidden" name="editing" value="<?= $editing ? '1' : '0' ?>">
@@ -414,7 +414,7 @@ unset($_SESSION['notice']);
                 <?php endforeach; ?>
                 <div class="actions">
                     <button class="button" type="submit">Save</button>
-                    <a class="button secondary" href="admin.php?view=<?= escapeHtml($view) ?>">New record</a>
+                    <a class="button secondary" href="?view=<?= escapeHtml($view) ?>">New record</a>
                 </div>
             </form>
         </section>
@@ -425,7 +425,7 @@ unset($_SESSION['notice']);
                 <?php foreach ($definition['fields'] as $field): ?><th><?= escapeHtml($field['label']) ?></th><?php endforeach; ?>
             </tr></thead><tbody>
             <?php foreach ($rows as $row): ?>
-                <tr><td><a href="admin.php?view=<?= escapeHtml($view) ?>&amp;id=<?= rawurlencode((string) $row[$definition['key']]) ?>">Edit</a></td>
+                <tr><td><a href="?view=<?= escapeHtml($view) ?>&amp;id=<?= rawurlencode((string) $row[$definition['key']]) ?>">Edit</a></td>
                 <?php foreach ($definition['fields'] as $name => $field): ?>
                     <td><?= escapeHtml(($field['type'] ?? '') === 'list' ? str_replace("\n", ', ', listText($row[$name] ?? null)) : (string) ($row[$name] ?? '')) ?></td>
                 <?php endforeach; ?></tr>

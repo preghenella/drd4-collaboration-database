@@ -302,7 +302,7 @@ try {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DRD4 Collaboration</title>
+    <title>DRD4 Collaboration Database</title>
     <style>
         :root {
             color-scheme: light;
@@ -478,7 +478,7 @@ try {
 </head>
 <body>
 <main>
-    <h1>DRD4 Collaboration</h1>
+    <h1>DRD4 Collaboration Database</h1>
 
     <nav class="tabs" aria-label="Database tables">
         <a
@@ -581,7 +581,7 @@ try {
                     <tr>
                         <th scope="col">Code</th>
                         <th scope="col">
-                            <?= $view === 'agencies' ? 'Funding agency' : 'Institution' ?>
+                            <?= $view === 'agencies' ? 'Funding agency' : 'Founding agency' ?>
                         </th>
                         <th scope="col">Country</th>
                         <th scope="col">Representative</th>

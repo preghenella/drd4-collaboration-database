@@ -42,6 +42,22 @@ function configurationValue(string $name)
     return false;
 }
 
+function authenticatedEditor(): ?string
+{
+    $identity = configurationValue('REMOTE_USER')
+        ?: configurationValue('OIDC_CLAIM_preferred_username')
+        ?: configurationValue('OIDC_CLAIM_cern_upn');
+    $configured = configurationValue('ADMIN_USERS');
+
+    if ($identity === false || $configured === false) {
+        return null;
+    }
+
+    $allowed = array_filter(array_map('trim', explode(',', $configured)));
+
+    return in_array($identity, $allowed, true) ? $identity : null;
+}
+
 function csvCell(?string $value): string
 {
     $value = $value ?? '';
@@ -79,6 +95,7 @@ $view = in_array(
     : 'institutions';
 $rows = [];
 $errorMessage = null;
+$editor = authenticatedEditor();
 
 try {
     $databaseUser = configurationValue('MYSQL_USER');
@@ -369,6 +386,11 @@ try {
             margin: 0;
         }
 
+        .toolbar-actions {
+            display: flex;
+            gap: 0.6rem;
+        }
+
         .export-button {
             display: inline-block;
             padding: 0.6rem 0.9rem;
@@ -519,9 +541,14 @@ try {
                     institutions
                 <?php endif; ?>
             </p>
-            <a class="export-button" href="?view=<?= $view ?>&amp;export=csv">
-                Export CSV
-            </a>
+            <div class="toolbar-actions">
+                <?php if ($editor !== null): ?>
+                    <a class="export-button" href="admin.php?view=<?= $view ?>">Manage data</a>
+                <?php endif; ?>
+                <a class="export-button" href="?view=<?= $view ?>&amp;export=csv">
+                    Export CSV
+                </a>
+            </div>
         </div>
 
         <div class="table-container">

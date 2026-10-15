@@ -70,7 +70,11 @@ function representedInstitutions(?string $json): array
 }
 
 $requestedView = $_GET['view'] ?? 'institutions';
-$view = in_array($requestedView, ['institutions', 'agencies', 'deliverables'], true)
+$view = in_array(
+    $requestedView,
+    ['institutions', 'agencies', 'resources-board', 'deliverables'],
+    true
+)
     ? $requestedView
     : 'institutions';
 $rows = [];
@@ -122,6 +126,13 @@ try {
             'SELECT id, code, name, country, representative, email, `function`,
                     delegate, delegate_email, institutions_represented
              FROM agencies
+             ORDER BY country, name'
+        );
+    } elseif ($view === 'resources-board') {
+        $statement = $database->query(
+            'SELECT id, code, name, country, representative, email,
+                    institutions_represented
+             FROM `resources-board`
              ORDER BY country, name'
         );
     } else {
@@ -217,6 +228,40 @@ try {
                         csvCell($agency['delegate']),
                         csvCell($agency['delegate_email']),
                         csvCell($agency['institutions_represented']),
+                    ],
+                    ',',
+                    '"',
+                    ''
+                );
+            }
+        } elseif ($view === 'resources-board') {
+            fputcsv(
+                $output,
+                [
+                    'id',
+                    'code',
+                    'name',
+                    'country',
+                    'representative',
+                    'email',
+                    'institutions_represented',
+                ],
+                ',',
+                '"',
+                ''
+            );
+
+            foreach ($rows as $member) {
+                fputcsv(
+                    $output,
+                    [
+                        csvCell((string) $member['id']),
+                        csvCell($member['code']),
+                        csvCell($member['name']),
+                        csvCell($member['country']),
+                        csvCell($member['representative']),
+                        csvCell($member['email']),
+                        csvCell($member['institutions_represented']),
                     ],
                     ',',
                     '"',
@@ -454,6 +499,11 @@ try {
             <?= $view === 'agencies' ? 'aria-current="page"' : '' ?>
         >Funding agencies</a>
         <a
+            class="tab<?= $view === 'resources-board' ? ' active' : '' ?>"
+            href="?view=resources-board"
+            <?= $view === 'resources-board' ? 'aria-current="page"' : '' ?>
+        >Resources Board</a>
+        <a
             class="tab<?= $view === 'deliverables' ? ' active' : '' ?>"
             href="?view=deliverables"
             <?= $view === 'deliverables' ? 'aria-current="page"' : '' ?>
@@ -468,6 +518,8 @@ try {
                 <?= count($rows) ?>
                 <?php if ($view === 'agencies'): ?>
                     funding agencies
+                <?php elseif ($view === 'resources-board'): ?>
+                    Resources Board members
                 <?php elseif ($view === 'deliverables'): ?>
                     deliverables
                 <?php else: ?>
@@ -530,15 +582,19 @@ try {
                 <?php endforeach; ?>
                 </tbody>
             </table>
-        <?php elseif ($view === 'agencies'): ?>
+        <?php elseif ($view === 'agencies' || $view === 'resources-board'): ?>
             <table>
                 <thead>
                     <tr>
                         <th scope="col">Code</th>
-                        <th scope="col">Funding agency</th>
+                        <th scope="col">
+                            <?= $view === 'agencies' ? 'Funding agency' : 'Institution' ?>
+                        </th>
                         <th scope="col">Country</th>
                         <th scope="col">Representative</th>
-                        <th scope="col">Delegate</th>
+                        <?php if ($view === 'agencies'): ?>
+                            <th scope="col">Delegate</th>
+                        <?php endif; ?>
                         <th scope="col">Institutions represented</th>
                     </tr>
                 </thead>
@@ -547,7 +603,7 @@ try {
                     <?php
                     $represented = representedInstitutions($agency['institutions_represented']);
                     $representativeDetails = array_filter([
-                        $agency['function'] !== null && $agency['function'] !== ''
+                        isset($agency['function']) && $agency['function'] !== ''
                             ? 'Function: ' . $agency['function']
                             : null,
                         $agency['email'] !== null && $agency['email'] !== ''
@@ -567,22 +623,20 @@ try {
                                 title="<?= escapeHtml(implode("\n", $representativeDetails)) ?>"
                                 <?php endif; ?>
                             ><?= escapeHtml($agency['representative']) ?></span>
-                        <?php else: ?>
-                            &mdash;
                         <?php endif; ?>
                         </td>
-                        <td>
-                        <?php if ($agency['delegate'] !== null && $agency['delegate'] !== ''): ?>
-                            <span
-                                class="contact-name"
-                                <?php if ($agency['delegate_email'] !== null && $agency['delegate_email'] !== ''): ?>
-                                title="Email: <?= escapeHtml($agency['delegate_email']) ?>"
-                                <?php endif; ?>
-                            ><?= escapeHtml($agency['delegate']) ?></span>
-                        <?php else: ?>
-                            &mdash;
+                        <?php if ($view === 'agencies'): ?>
+                            <td>
+                            <?php if ($agency['delegate'] !== null && $agency['delegate'] !== ''): ?>
+                                <span
+                                    class="contact-name"
+                                    <?php if ($agency['delegate_email'] !== null && $agency['delegate_email'] !== ''): ?>
+                                    title="Email: <?= escapeHtml($agency['delegate_email']) ?>"
+                                    <?php endif; ?>
+                                ><?= escapeHtml($agency['delegate']) ?></span>
+                            <?php endif; ?>
+                            </td>
                         <?php endif; ?>
-                        </td>
                         <td>
                         <?php if ($represented !== []): ?>
                             <span

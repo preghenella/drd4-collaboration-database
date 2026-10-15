@@ -148,6 +148,7 @@ function audit(
 $definitions = [
     'institutions' => [
         'label' => 'Institution',
+        'tab_label' => 'Institutions',
         'table' => 'institutions',
         'key' => 'code',
         'fields' => [
@@ -160,6 +161,7 @@ $definitions = [
     ],
     'agencies' => [
         'label' => 'Funding agency',
+        'tab_label' => 'Funding agencies',
         'table' => 'agencies',
         'key' => 'id',
         'fields' => [
@@ -174,6 +176,7 @@ $definitions = [
     ],
     'resources-board' => [
         'label' => 'Resources Board member',
+        'tab_label' => 'Resources Board',
         'table' => 'resources_board',
         'key' => 'id',
         'fields' => [
@@ -186,6 +189,7 @@ $definitions = [
     ],
     'deliverables' => [
         'label' => 'Deliverable',
+        'tab_label' => 'Deliverables',
         'table' => 'deliverables',
         'key' => 'id',
         'fields' => [
@@ -370,9 +374,11 @@ unset($_SESSION['notice']);
         body { margin: 0; }
         main { max-width: 1400px; margin: auto; padding: 2rem 1rem 3rem; }
         h1, h2 { color: #17365d; }
-        .tabs { display: flex; flex-wrap: wrap; gap: .3rem; margin: 1rem 0; }
-        .tabs a, .button { padding: .65rem .9rem; border: 0; border-radius: .35rem; color: white; background: #17365d; text-decoration: none; cursor: pointer; font-weight: bold; }
-        .tabs a.active { background: #3974ad; }
+        .tabs { display: flex; gap: .25rem; margin: 1.25rem 0; border-bottom: 2px solid #17365d; }
+        .tab { padding: .7rem 1rem; border-radius: .35rem .35rem 0 0; color: #17365d; background: #e5eaf0; text-decoration: none; font-weight: bold; }
+        .tab:hover, .tab:focus { background: #d5dfeb; }
+        .tab.active { color: white; background: #17365d; }
+        .button { padding: .65rem .9rem; border: 0; border-radius: .35rem; color: white; background: #17365d; text-decoration: none; cursor: pointer; font-weight: bold; }
         .layout { display: grid; grid-template-columns: minmax(20rem, 1fr) minmax(30rem, 2fr); gap: 1.5rem; align-items: start; }
         .panel { padding: 1.2rem; border: 1px solid #c8d0da; border-radius: .4rem; background: white; }
         label { display: block; margin: .8rem 0; font-weight: bold; }
@@ -398,7 +404,11 @@ unset($_SESSION['notice']);
     <p class="identity">Signed in as <?= escapeHtml($editor) ?> · <a href="../?view=<?= escapeHtml($view) ?>">Public view</a></p>
     <nav class="tabs" aria-label="Database tables">
     <?php foreach ($definitions as $name => $item): ?>
-        <a class="<?= $view === $name ? 'active' : '' ?>" href="?view=<?= escapeHtml($name) ?>"><?= escapeHtml($item['label']) ?>s</a>
+        <a
+            class="tab<?= $view === $name ? ' active' : '' ?>"
+            href="?view=<?= escapeHtml($name) ?>"
+            <?= $view === $name ? 'aria-current="page"' : '' ?>
+        ><?= escapeHtml($item['tab_label']) ?></a>
     <?php endforeach; ?>
     </nav>
     <?php if ($notice !== null): ?><p class="notice"><?= escapeHtml($notice) ?></p><?php endif; ?>

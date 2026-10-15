@@ -554,9 +554,6 @@ try {
                 <?php endif; ?>
             </p>
             <div class="toolbar-actions">
-                <?php if ($editor !== null): ?>
-                    <a class="export-button" href="admin/?view=<?= $view ?>">Manage data</a>
-                <?php endif; ?>
                 <a class="export-button" href="?view=<?= $view ?>&amp;export=csv">
                     Export CSV
                 </a>

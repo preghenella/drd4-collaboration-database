@@ -46,7 +46,8 @@ function authenticatedEditor(): ?string
 {
     $identity = configurationValue('REMOTE_USER')
         ?: configurationValue('OIDC_CLAIM_preferred_username')
-        ?: configurationValue('OIDC_CLAIM_cern_upn');
+        ?: configurationValue('OIDC_CLAIM_cern_upn')
+        ?: configurationValue('HTTP_X_FORWARDED_USER');
     $configured = configurationValue('ADMIN_USERS');
 
     if ($identity === false || $configured === false) {

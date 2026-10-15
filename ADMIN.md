@@ -26,12 +26,14 @@ deliverables.
 
    The public page continues to use `MYSQL_USER` and `MYSQL_PASSWORD`, which
    should remain read-only.
-4. Protect the site with CERN SSO so Apache sets `REMOTE_USER` (the standard
-   OIDC claim variables are also supported).
+4. Protect the site with CERN SSO. The standard Apache/OIDC identity variables
+   and the CERN Auth Proxy's `X-Forwarded-User` header are supported. When the
+   proxy header is used, the PHP service must not have a public Route that
+   bypasses the Auth Proxy, otherwise clients could forge the header.
 5. Set `ADMIN_USERS` in the web-server environment to a comma-separated list
    of exact authenticated usernames, for example:
 
-       ADMIN_USERS=rpreghen,gwilkins
+       ADMIN_USERS=roberto.preghenella@bo.infn.it,guy.wilkinson@cern.ch
 
    Editing is disabled when this variable is absent. Restart or reload the web
    service after changing its environment.

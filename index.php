@@ -499,7 +499,7 @@ try {
 
         .status-check {
             color: #188038;
-            font-size: 1.25rem;
+            font-size: 2.5rem;
             font-weight: bold;
         }
 
@@ -630,8 +630,8 @@ try {
                         <th scope="col">Country</th>
                         <th scope="col">Representative</th>
                         <?php if ($view === 'agencies'): ?>
-                            <th scope="col">MoU signed</th>
                             <th scope="col">Institutions represented</th>
+                            <th scope="col">MoU signed</th>
                         <?php endif; ?>
                     </tr>
                 </thead>
@@ -666,17 +666,17 @@ try {
                         </td>
                         <?php if ($view === 'agencies'): ?>
                             <td>
-                            <?php if ((bool) $agency['mou_signed']): ?>
-                                <span class="status-check" aria-label="MoU signed">&#10003;</span>
-                            <?php endif; ?>
-                            </td>
-                            <td>
                             <?php if ($represented !== []): ?>
                                 <span
                                     class="institutes-help"
                                     title="<?= escapeHtml(implode("\n", $represented)) ?>"
                                     aria-label="Institutions represented: <?= escapeHtml(implode(', ', $represented)) ?>"
                                 ><?= count($represented) ?></span>
+                            <?php endif; ?>
+                            </td>
+                            <td>
+                            <?php if ((bool) $agency['mou_signed']): ?>
+                                <span class="status-check" aria-label="MoU signed">&#10003;</span>
                             <?php endif; ?>
                             </td>
                         <?php endif; ?>

@@ -95,6 +95,7 @@ $view = in_array(
     ? $requestedView
     : 'institutions';
 $rows = [];
+$signatoryCount = 0;
 $errorMessage = null;
 $editor = authenticatedEditor();
 
@@ -161,6 +162,12 @@ try {
     }
 
     $rows = $statement->fetchAll();
+    if ($view === 'agencies') {
+        $signatoryCount = count(array_filter(
+            $rows,
+            static fn(array $agency): bool => (bool) $agency['mou_signed']
+        ));
+    }
 
     if (isset($_GET['export']) && $_GET['export'] === 'csv') {
         header('Content-Type: text/csv; charset=UTF-8');
@@ -557,7 +564,9 @@ try {
             <p class="summary">
                 <?= count($rows) ?>
                 <?php if ($view === 'agencies'): ?>
-                    funding agencies
+                    <?= count($rows) === 1 ? 'funding agency' : 'funding agencies' ?>
+                    (<?= $signatoryCount ?> MoU
+                    <?= $signatoryCount === 1 ? 'signatory' : 'signatories' ?>)
                 <?php elseif ($view === 'resources-board'): ?>
                     Resources Board members
                 <?php elseif ($view === 'deliverables'): ?>

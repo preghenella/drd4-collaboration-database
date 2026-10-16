@@ -639,7 +639,7 @@ try {
                     <tr>
                         <th scope="col">Code</th>
                         <th scope="col">
-                            <?= $view === 'agencies' ? 'Funding agency' : 'Founding agency' ?>
+                            Funding agency
                         </th>
                         <th scope="col">Country</th>
                         <th scope="col">Representative</th>

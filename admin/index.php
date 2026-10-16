@@ -199,7 +199,7 @@ $definitions = [
         'key' => 'id',
         'fields' => [
             'code' => ['label' => 'Code'],
-            'name' => ['label' => 'Founding agency', 'required' => true],
+            'name' => ['label' => 'Funding agency', 'required' => true],
             'country' => ['label' => 'Country', 'required' => true],
             'representative' => ['label' => 'Representative'],
             'email' => ['label' => 'Email', 'type' => 'email'],

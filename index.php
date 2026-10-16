@@ -142,7 +142,7 @@ try {
     } elseif ($view === 'agencies') {
         $statement = $database->query(
             'SELECT id, code, name, country, representative, email, `function`,
-                    institutions_represented, mou_signed
+                    institutions_represented, mou_signed, mou_sign_date
              FROM agencies
              ORDER BY country, name'
         );
@@ -224,6 +224,7 @@ try {
                     'function',
                     'institutions_represented',
                     'mou_signed',
+                    'mou_sign_date',
                 ],
                 ',',
                 '"',
@@ -243,6 +244,7 @@ try {
                         csvCell($agency['function']),
                         csvCell($agency['institutions_represented']),
                         csvCell((string) $agency['mou_signed']),
+                        csvCell($agency['mou_sign_date']),
                     ],
                     ',',
                     '"',
@@ -498,9 +500,12 @@ try {
         .work-package-badge.wp-5 { background: #b3261e; }
 
         .status-check {
+            display: inline-block;
             color: #188038;
-            font-size: 2.5rem;
+            font-size: 1.25rem;
             font-weight: bold;
+            line-height: 1;
+            transform: scale(2);
         }
 
         .error {
@@ -676,7 +681,15 @@ try {
                             </td>
                             <td>
                             <?php if ((bool) $agency['mou_signed']): ?>
-                                <span class="status-check" aria-label="MoU signed">&#10003;</span>
+                                <span
+                                    class="status-check"
+                                    <?php if ($agency['mou_sign_date'] !== null): ?>
+                                    title="Signed on <?= escapeHtml($agency['mou_sign_date']) ?>"
+                                    aria-label="MoU signed on <?= escapeHtml($agency['mou_sign_date']) ?>"
+                                    <?php else: ?>
+                                    aria-label="MoU signed"
+                                    <?php endif; ?>
+                                >&#10003;</span>
                             <?php endif; ?>
                             </td>
                         <?php endif; ?>

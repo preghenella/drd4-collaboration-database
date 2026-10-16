@@ -121,6 +121,22 @@ function validateEmail(?string $email, string $label, array &$errors): void
     }
 }
 
+function validateDate(?string $date, string $label, array &$errors): void
+{
+    if ($date === null) {
+        return;
+    }
+
+    $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $date);
+    $dateErrors = DateTimeImmutable::getLastErrors();
+    $hasParsingErrors = $dateErrors !== false
+        && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0);
+
+    if ($parsed === false || $hasParsingErrors || $parsed->format('Y-m-d') !== $date) {
+        $errors[] = $label . ' must be a valid date in YYYY-MM-DD format.';
+    }
+}
+
 function audit(
     PDO $database,
     string $table,
@@ -173,6 +189,7 @@ $definitions = [
             'function' => ['label' => 'Function'],
             'institutions_represented' => ['label' => 'Institution codes', 'type' => 'list'],
             'mou_signed' => ['label' => 'MoU signed', 'type' => 'checkbox'],
+            'mou_sign_date' => ['label' => 'MoU signing date', 'type' => 'date'],
         ],
     ],
     'resources-board' => [
@@ -236,6 +253,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (($field['type'] ?? '') === 'email') {
             validateEmail(nullable($record[$name]), $field['label'], $errors);
+        }
+        if (($field['type'] ?? '') === 'date') {
+            validateDate(nullable($record[$name]), $field['label'], $errors);
         }
         if (($field['type'] ?? '') === 'number'
             && (!ctype_digit($record[$name]) || (int) $record[$name] < 1)) {

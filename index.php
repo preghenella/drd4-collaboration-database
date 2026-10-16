@@ -142,7 +142,7 @@ try {
     } elseif ($view === 'agencies') {
         $statement = $database->query(
             'SELECT id, code, name, country, representative, email, `function`,
-                    institutions_represented
+                    institutions_represented, mou_signed
              FROM agencies
              ORDER BY country, name'
         );
@@ -223,6 +223,7 @@ try {
                     'email',
                     'function',
                     'institutions_represented',
+                    'mou_signed',
                 ],
                 ',',
                 '"',
@@ -241,6 +242,7 @@ try {
                         csvCell($agency['email']),
                         csvCell($agency['function']),
                         csvCell($agency['institutions_represented']),
+                        csvCell((string) $agency['mou_signed']),
                     ],
                     ',',
                     '"',
@@ -495,6 +497,12 @@ try {
         .work-package-badge.wp-4 { background: #b45309; }
         .work-package-badge.wp-5 { background: #b3261e; }
 
+        .status-check {
+            color: #188038;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
         .error {
             padding: 1rem;
             border: 1px solid #b3261e;
@@ -622,6 +630,7 @@ try {
                         <th scope="col">Country</th>
                         <th scope="col">Representative</th>
                         <?php if ($view === 'agencies'): ?>
+                            <th scope="col">MoU signed</th>
                             <th scope="col">Institutions represented</th>
                         <?php endif; ?>
                     </tr>
@@ -656,6 +665,11 @@ try {
                         <?php endif; ?>
                         </td>
                         <?php if ($view === 'agencies'): ?>
+                            <td>
+                            <?php if ((bool) $agency['mou_signed']): ?>
+                                <span class="status-check" aria-label="MoU signed">&#10003;</span>
+                            <?php endif; ?>
+                            </td>
                             <td>
                             <?php if ($represented !== []): ?>
                                 <span

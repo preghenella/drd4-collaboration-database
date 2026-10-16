@@ -172,6 +172,7 @@ $definitions = [
             'email' => ['label' => 'Representative email', 'type' => 'email'],
             'function' => ['label' => 'Function'],
             'institutions_represented' => ['label' => 'Institution codes', 'type' => 'list'],
+            'mou_signed' => ['label' => 'MoU signed', 'type' => 'checkbox'],
         ],
     ],
     'resources-board' => [
@@ -227,7 +228,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $recordKey = trim((string) ($_POST['record_key'] ?? ''));
     $recordVersion = trim((string) ($_POST['record_version'] ?? ''));
     foreach ($definition['fields'] as $name => $field) {
-        $record[$name] = trim((string) ($_POST[$name] ?? ''));
+        $record[$name] = ($field['type'] ?? '') === 'checkbox'
+            ? (isset($_POST[$name]) ? '1' : '0')
+            : trim((string) ($_POST[$name] ?? ''));
         if (($field['required'] ?? false) && $record[$name] === '') {
             $errors[] = $field['label'] . ' is required.';
         }
@@ -246,9 +249,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($errors === []) {
         $values = [];
         foreach ($definition['fields'] as $name => $field) {
-            $values[$name] = ($field['type'] ?? '') === 'list'
-                ? listJson($record[$name])
-                : nullable($record[$name]);
+            if (($field['type'] ?? '') === 'list') {
+                $values[$name] = listJson($record[$name]);
+            } elseif (($field['type'] ?? '') === 'checkbox') {
+                $values[$name] = $record[$name] === '1' ? 1 : 0;
+            } else {
+                $values[$name] = nullable($record[$name]);
+            }
         }
         $database->beginTransaction();
         try {
@@ -383,6 +390,8 @@ unset($_SESSION['notice']);
         .panel { padding: 1.2rem; border: 1px solid #c8d0da; border-radius: .4rem; background: white; }
         label { display: block; margin: .8rem 0; font-weight: bold; }
         input, textarea { box-sizing: border-box; width: 100%; margin-top: .3rem; padding: .55rem; border: 1px solid #9aa4af; border-radius: .3rem; font: inherit; }
+        .checkbox-field { display: flex; align-items: center; gap: .5rem; }
+        .checkbox-field input { width: auto; margin: 0; }
         textarea { min-height: 7rem; resize: vertical; }
         .actions { display: flex; gap: .6rem; margin-top: 1rem; }
         .secondary { color: #17365d; background: #e5eaf0; }
@@ -428,6 +437,17 @@ unset($_SESSION['notice']);
                 <input type="hidden" name="record_key" value="<?= escapeHtml($recordKey) ?>">
                 <input type="hidden" name="record_version" value="<?= escapeHtml($recordVersion) ?>">
                 <?php foreach ($definition['fields'] as $name => $field): ?>
+                    <?php if (($field['type'] ?? '') === 'checkbox'): ?>
+                    <label class="checkbox-field">
+                        <input
+                            type="checkbox"
+                            name="<?= escapeHtml($name) ?>"
+                            value="1"
+                            <?= $record[$name] === '1' ? 'checked' : '' ?>
+                        >
+                        <?= escapeHtml($field['label']) ?>
+                    </label>
+                    <?php else: ?>
                     <label>
                         <?= escapeHtml($field['label']) ?><?= ($field['required'] ?? false) ? ' *' : '' ?>
                         <?php if (in_array($field['type'] ?? '', ['textarea', 'list'], true)): ?>
@@ -436,6 +456,7 @@ unset($_SESSION['notice']);
                             <input type="<?= escapeHtml($field['type'] ?? 'text') ?>" name="<?= escapeHtml($name) ?>" value="<?= escapeHtml($record[$name]) ?>"<?= ($field['required'] ?? false) ? ' required' : '' ?>>
                         <?php endif; ?>
                     </label>
+                    <?php endif; ?>
                 <?php endforeach; ?>
                 <div class="actions">
                     <button class="button" type="submit"<?= $loadError !== null ? ' disabled' : '' ?>>Save</button>
@@ -454,7 +475,15 @@ unset($_SESSION['notice']);
             <?php foreach ($rows as $row): ?>
                 <tr><td><a href="?view=<?= escapeHtml($view) ?>&amp;id=<?= rawurlencode((string) $row[$definition['key']]) ?>">Edit</a></td>
                 <?php foreach ($definition['fields'] as $name => $field): ?>
-                    <td><?= escapeHtml(($field['type'] ?? '') === 'list' ? str_replace("\n", ', ', listText($row[$name] ?? null)) : (string) ($row[$name] ?? '')) ?></td>
+                    <td><?php
+                        if (($field['type'] ?? '') === 'list') {
+                            echo escapeHtml(str_replace("\n", ', ', listText($row[$name] ?? null)));
+                        } elseif (($field['type'] ?? '') === 'checkbox') {
+                            echo (bool) ($row[$name] ?? false) ? '&#10003;' : '';
+                        } else {
+                            echo escapeHtml((string) ($row[$name] ?? ''));
+                        }
+                    ?></td>
                 <?php endforeach; ?></tr>
             <?php endforeach; ?>
             </tbody></table></div>

@@ -41,18 +41,30 @@ function requireAdmin(): string {
     if ($user === null || !isAdmin()) { http_response_code(403); exit('You are not authorized to administer the document database.'); }
     return $user;
 }
-function pdo(string $userVariable, string $passwordVariable, string $database): PDO {
+function pdo(
+    string $userVariable,
+    string $passwordVariable,
+    string $database,
+    string $hostVariable = 'MYSQL_HOST',
+    string $portVariable = 'MYSQL_PORT'
+): PDO {
     $user = config($userVariable); $password = config($passwordVariable);
     if ($user === false || $password === false) throw new RuntimeException('Database credentials are not configured.');
-    $host = config('MYSQL_HOST') ?: 'dbod-drd4-collaboration-database.cern.ch';
-    $port = config('MYSQL_PORT') ?: '5547';
+    $host = config($hostVariable) ?: 'dbod-drd4-collaboration-database.cern.ch';
+    $port = config($portVariable) ?: '5547';
     return new PDO(sprintf('mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4', $host, $port, $database), (string) $user, (string) $password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
 }
 function documentsDatabase(bool $write = false): PDO {
-    return pdo($write ? 'MYSQL_WRITE_USER' : 'MYSQL_USER', $write ? 'MYSQL_WRITE_PASSWORD' : 'MYSQL_PASSWORD', (string) (config('MYSQL_DATABASE') ?: 'drd4_documents'));
+    return pdo(
+        $write ? 'DOCUMENTS_MYSQL_WRITE_USER' : 'DOCUMENTS_MYSQL_USER',
+        $write ? 'DOCUMENTS_MYSQL_WRITE_PASSWORD' : 'DOCUMENTS_MYSQL_PASSWORD',
+        (string) (config('DOCUMENTS_MYSQL_DATABASE') ?: 'drd4_documents'),
+        'DOCUMENTS_MYSQL_HOST',
+        'DOCUMENTS_MYSQL_PORT'
+    );
 }
 function collaborationDatabase(): ?PDO {
     try { return pdo('COLLABORATION_MYSQL_USER', 'COLLABORATION_MYSQL_PASSWORD', (string) (config('COLLABORATION_MYSQL_DATABASE') ?: 'drd4')); }

@@ -6,14 +6,17 @@ environment-variable configuration pattern. No credentials are stored here.
 ## Document database
 
 ```text
-MYSQL_HOST=dbod-drd4-collaboration-database.cern.ch
-MYSQL_PORT=5547
-MYSQL_DATABASE=drd4_documents
-MYSQL_USER=documents_reader
-MYSQL_PASSWORD=...
-MYSQL_WRITE_USER=documents_writer
-MYSQL_WRITE_PASSWORD=...
+DOCUMENTS_MYSQL_HOST=dbod-drd4-collaboration-database.cern.ch
+DOCUMENTS_MYSQL_PORT=5547
+DOCUMENTS_MYSQL_DATABASE=drd4_documents
+DOCUMENTS_MYSQL_USER=documents_reader
+DOCUMENTS_MYSQL_PASSWORD=...
+DOCUMENTS_MYSQL_WRITE_USER=documents_writer
+DOCUMENTS_MYSQL_WRITE_PASSWORD=...
 ```
+
+These variables are deliberately separate from the existing site's `MYSQL_*`
+variables, which continue to select the `drd4` collaboration database.
 
 The upload ceiling defaults to 20 MiB and can be changed with
 `DOCUMENT_MAX_UPLOAD_BYTES`. PHP's `upload_max_filesize` and `post_max_size`

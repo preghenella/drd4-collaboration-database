@@ -22,6 +22,20 @@ The upload ceiling defaults to 20 MiB and can be changed with
 `DOCUMENT_MAX_UPLOAD_BYTES`. PHP's `upload_max_filesize` and `post_max_size`
 must be at least as large.
 
+The editor can change all user-managed metadata and replace a PDF. In addition
+to its existing grants, `documents_writer` therefore needs:
+
+```sql
+GRANT UPDATE (reference, version, title, document_date, approved,
+              approval_date, access_level, funding_agency_id)
+    ON drd4_documents.document_metadata TO 'documents_writer'@'%';
+GRANT UPDATE (filename, pdf_data)
+    ON drd4_documents.document_files TO 'documents_writer'@'%';
+```
+
+The primary-key ID and automatic `uploaded_at` audit timestamp remain
+application-managed and are not editable.
+
 ## Authentication and roles
 
 Protect the service with the same CERN SSO/Auth Proxy arrangement as the
@@ -59,6 +73,6 @@ are denied by default and the server log identifies the missing integration.
 
 Every admin page and POST operation requires `ADMIN_USERS`. Writes use CSRF
 tokens and prepared statements. Metadata and PDF inserts share one transaction.
-Only approval fields are updated after upload. Deletion targets metadata and
-relies on the database cascade. Lists, filter choices, details and PDF delivery
-all use the same access-policy builder.
+Edits, including optional PDF replacement, are also transactional. Deletion
+targets metadata and relies on the database cascade. Lists, filter choices,
+details and PDF delivery all use the same access-policy builder.
